@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Core.Interfaces;
 using Infrastructure.Data;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -24,10 +25,10 @@ namespace API
             _config = config;
         }
 
-        // This method gets called by the runtime. Use this method to add services to the container.
+        // This method gets called by the runtime. Use this method to add services to the container (so that the services can be used in other part of the project).
         public void ConfigureServices(IServiceCollection services)
         {
-
+            
             services.AddControllers();
             services.AddSwaggerGen(c =>
             {
@@ -37,6 +38,12 @@ namespace API
             //UseSqlite then call the connection string  
             services.AddDbContext<StoreContext>(x => 
                 x.UseSqlite(_config.GetConnectionString("DefaultConnection")));
+            //Add service for the Repository so that it's injectable (we can use it at other parts in the application)
+            //To add a services., first we need to decide what the lifetime for what we're adding should be. Most of the time we use AddScoped
+            //AddScoped: is what the DbContext is using. It means the service will be alive for the lifetime of the request. 
+            //Meaning it's gonna be created when an HTTP request comes into the API, create a new instance in the Controllers, the Controller sees that it needs a Repository, so it creates an instance of the Repository.
+            //When the request is finished, it disposes both the Controller and the Repository 
+            services.AddScoped<IProductRepository, ProductRepository>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
